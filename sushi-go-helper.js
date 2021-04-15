@@ -85,13 +85,17 @@ function startNewGame(){
 }
 
 function setupUi(){
-    document.body.innerHTML += '<div id="card-tracker-container" style="position:fixed;width:200px;height:400px;z-index:100;background:#000;top:40%;right:0;color:white;"></div>';
+    var element = document.createElement('div');
+    element.style.cssText = 'position:fixed;width:400px;height:400px;z-index:100;background:#000;top:40%;right:0;color:white;';
+    element.id = "card-tracker-container";
+    document.body.appendChild(element);
+    updateUi();
 }
 
 function updateUi(){
     var cardTrackerContainer = document.getElementById("card-tracker-container");
     cardTrackerContainer.innerHTML = "";
-    for(var playerNumber = 1; playerNumber <= getNumberOfPlayers(); playerNumber++){
+    for(var playerNumber = 2; playerNumber <= getNumberOfPlayers(); playerNumber++){
         cardTrackerContainer.innerHTML += "<div>" + getCardsInPlayersHandAsString(playerNumber) + "</div>";
     }
 }
@@ -138,6 +142,19 @@ function gameHasStarted(){
     return false;
 }
 
+function noMoreCardsToPlay(){
+    if (getNumberOfCardsInMyHand() == 0){
+        return true;
+    }
+    return false;
+}
+
+function resetRound(){
+    previousNumberOfCards = 0;
+    currentNumberOfCards = 0;
+    playersCards = {};
+}
+
 function setUpGameStartWatch(){
     var gameStartWatch = setInterval(function() {
         if (gameHasStarted()){
@@ -156,6 +173,11 @@ function setUpCardWatch(){
             setCardsInMyHand();
             console.log("Card has been played");
             updateCardsInPlayersHandsAfterCardHasBeenPlayed();
+            updateUi();
+            if (noMoreCardsToPlay()){
+                resetRound();
+                console.log("Resetting Round");
+            }
         }
         else {
             console.log("Card has not been played");
