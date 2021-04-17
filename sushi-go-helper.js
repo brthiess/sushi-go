@@ -10,7 +10,20 @@ function getNumberOfPlayers(){
 //player number starts at 1.  1 is me.  2 is the next person to my right... etc.
 //returns array of the players played cards
 function getPlayersPlayedCards(playerNumber){
-    return gameui.playersStock[getPlayerIdByPlayerNumber(playerNumber)].items;
+    var playedCardsExcludingCardsOnWasabi = gameui.playersStock[getPlayerIdByPlayerNumber(playerNumber)].items;
+    var allPlayedCards = playedCardsExcludingCardsOnWasabi.slice();
+    var wasabiStock = gameui.wasabiStock;
+    for(var cardNumber = 0; cardNumber < playedCardsExcludingCardsOnWasabi.length; cardNumber++){
+        var cardId = playedCardsExcludingCardsOnWasabi[cardNumber].id;
+        if (typeof(wasabiStock[cardId]) !== 'undefined'){
+            allPlayedCards.push(wasabiStock[cardId].items[0]);
+        }
+    }
+    return allPlayedCards;
+}
+
+function getNumberOfPlayersPlayedCards(playerNumber){
+    return getPlayersPlayedCards(playerNumber).length;
 }
 
 //returns array with each item like: {id: 123, type: "eggnigiri" }
@@ -112,15 +125,24 @@ function getCardsInPlayersHandAsString(playerNumber){
     return '???';
 }
 
-var previousNumberOfCards = 0;
-var currentNumberOfCards = 0;
+var previousNumberOfPlayedCards = 0;
+var currentNumberOfPlayedCards = 0;
 function cardHasBeenPlayed() {
     var cardHasBeenPlayed = false;
-    currentNumberOfCards = getNumberOfCardsInMyHand();
-    if (currentNumberOfCards === previousNumberOfCards - 1) {
-        cardHasBeenPlayed = true;
+    var inTransition = false;
+    currentNumberOfPlayedCards = getNumberOfPlayersPlayedCards(1);
+    for(var playerNumber = 2; playerNumber <= getNumberOfPlayers(); playerNumber++){
+        if (getNumberOfPlayersPlayedCards(playerNumber) != getNumberOfPlayersPlayedCards(playerNumber - 1)){
+            inTransition = true;
+        }
     }
-    previousNumberOfCards = currentNumberOfCards;
+
+    if (!inTransition && currentNumberOfPlayedCards === previousNumberOfPlayedCards + 1){
+        cardHasBeenPlayed = true;
+        previousNumberOfPlayedCards = currentNumberOfPlayedCards;
+    }
+    
+    
     return cardHasBeenPlayed;
 }
 
@@ -150,8 +172,8 @@ function noMoreCardsToPlay(){
 }
 
 function resetRound(){
-    previousNumberOfCards = 0;
-    currentNumberOfCards = 0;
+    previousNumberOfPlayedCards = 0;
+    currentNumberOfPlayedCards = 0;
     playersCards = {};
 }
 
@@ -182,7 +204,7 @@ function setUpCardWatch(){
         else {
             console.log("Card has not been played");
         }
-    }, 1000)
+    }, 100)
 }
 
 function gameUiIsDefined(){
